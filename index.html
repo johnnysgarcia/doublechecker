@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Booking Software Scanner</title>
+    <link rel="stylesheet" href="styles.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="https://fh-kit.com/buttons/v2/?peek=fff203&rezdy=0046d1&trytn=01dcb6&checkfront=1275b8&regpack=74b01a&bokun=1d57c7&lodgify=ff3b59&cloudbeds=3366FF&zerve=ee9022&calendly=026bff&eventbrite=d1410c&trekksoft=0e3f31&travefy=45bbff&anyroad=f58f00&airbnb=ff385c&booqable=ffffff" type="text/css" media="screen" />
+</head>
+<body>
+    <div class="container">
+        <h1>Online Booking Software Scanner</h1>
+        <label for="url">Enter URL:</label>
+        <input type="text" id="url" placeholder="Enter URL...">
+        <input type="text" id="searchString" placeholder="Search String (Optional)">
+        <button id="scanBtn">Scan</button>
+
+        <h3>Services</h3>
+        <ul class="services-list">
+            <li><input type="checkbox" name="service" value="fareharbor" checked> FareHarbor</li>
+            <li><input type="checkbox" name="service" value="zerve"> Zerve</li>
+            <li><input type="checkbox" name="service" value="peek"> Peek</li>
+            <li><input type="checkbox" name="service" value="calendly"> Calendly</li>
+            <li><input type="checkbox" name="service" value="rezdy"> Rezdy</li>
+            <li><input type="checkbox" name="service" value="eventbrite"> EventBrite</li>
+            <li><input type="checkbox" name="service" value="trytn"> Trytn</li>
+            <li><input type="checkbox" name="service" value="trekksoft"> Trekksoft</li>
+            <li><input type="checkbox" name="service" value="checkfront"> Checkfront</li>
+            <li><input type="checkbox" name="service" value="travefy"> Travefy</li>
+            <li><input type="checkbox" name="service" value="regpack"> Regpack</li>
+            <li><input type="checkbox" name="service" value="anyroad"> Anyroad</li>
+            <li><input type="checkbox" name="service" value="bokun"> Bokun</li>
+            <li><input type="checkbox" name="service" value="airbnb"> Airbnb</li>
+            <li><input type="checkbox" name="service" value="lodgify"> Lodgify</li>
+            <li><input type="checkbox" name="service" value="booqable"> Booqable</li>
+            <li><input type="checkbox" name="service" value="cloudbeds"> Cloudbeds</li>
+            <li><input type="checkbox" name="service" value="all"> All External Links</li>
+        </ul>
+
+        <div class="results" id="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
