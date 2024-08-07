@@ -5,7 +5,7 @@ $(document).ready(function() {
         var url = $('#url').val();
         var searchString = $('#searchString').val();
         clearResults(); // Clear existing results
-        scanPage(url, searchString);
+        scanPage(url, searchString); //testing
     });
 
     $('input[name="service"]').change(function() {
@@ -26,15 +26,15 @@ $(document).ready(function() {
             return; // If page is already scanned, return
         }
         scannedPages[url] = true; // Mark the page as scanned
-        
-        //fetches the content of the URL 
+
+        //fetches the content of the URL
         $.get(url, function(data) {
-	        //returns a collection of all a tags with an href. 
+	        //returns a collection of all a tags with an href.
             var links = $(data).find('a[href]');
             console.log('links is ' + links);
             displayLinks(url, links, searchString);
-            
-            //loops through all the links 
+
+            //loops through all the links
             links.each(function() {
                 var href = $(this).attr('href');
                 //if its an internal page, recursively call this function for that link
@@ -46,22 +46,22 @@ $(document).ready(function() {
         });
     }
 
-	//takes the page URL, the list of links on that page, and a search string if provided 
+	//takes the page URL, the list of links on that page, and a search string if provided
     function displayLinks(pageUrl, links, searchString) {
         var selectedServices = getSelectedServices();
         var $results = $('#results');
         var isFloater = false;
-        //create a header for this page 
+        //create a header for this page
         $results.append('<h2>Website Page: <a href="' + pageUrl + '">' + pageUrl + '</a></h2>');
         $results.append('<h3>External links found:</h3>');
         var $externalLinksUl = $('<ul></ul>');
-        //scans through links on the page. 
+        //scans through links on the page.
         links.each(function() {
             var href = $(this).attr('href');
            //checks for the fh-fixed--bottom class, currently I don't think the app registers the floater as this is always returning false
             isFloater = $(this).hasClass('fh-fixed--bottom');
             console.log(isFloater)
-             //if the link is one we are searching for, call format link and append it to the list. 
+             //if the link is one we are searching for, call format link and append it to the list.
             if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
                 var formattedLink = formatExternalLink(href, isFloater);
                 $externalLinksUl.append('<li>' + formattedLink + '</li>');
@@ -71,14 +71,14 @@ $(document).ready(function() {
     }
 
     function formatExternalLink(url, isFloater) {
-	    // if the link is a fareharbor link, split up the values on the link 
+	    // if the link is a fareharbor link, split up the values on the link
         if (url.includes('fareharbor.com')) {
             var shortName = url.split('/')[5];
             var itemMatch = url.match(/items\/(\d+)/);
             var flowMatch = url.match(/flow=(\d+)/);
             var itemName = itemMatch ? itemMatch[1] : '';
             var flowName = flowMatch ? flowMatch[1] : '';
-            //format listing depending on the service. 
+            //format listing depending on the service.
             return '<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">SN: ' + shortName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Item: ' + itemName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Flow: ' + flowName + '</div>';
         } else if (url.includes('peek.com')){
 	        var link = url;
