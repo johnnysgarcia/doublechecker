@@ -22,6 +22,11 @@ label {
     font-weight: bold;
     color: #333;
 }
+
+#errorBox > div > h3 {
+  color: #cc0000;
+
+}
 input[type="text"] {
     width: calc(50% - 22px);
     padding: 10px;
@@ -55,7 +60,7 @@ button:hover {
     padding: 0;
 }
 .results li {
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 .results li a {
     color: #0a6ece;

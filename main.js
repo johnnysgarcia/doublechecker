@@ -5,7 +5,8 @@ $(document).ready(function() {
         var url = $('#url').val();
         var searchString = $('#searchString').val();
         clearResults(); // Clear existing results
-        scanPage(url, searchString); //testing
+        clearError();
+        scanPage(url, searchString);
     });
 
     $('input[name="service"]').change(function() {
@@ -21,53 +22,92 @@ $(document).ready(function() {
         }
     });
 
-    function scanPage(url, searchString) {
-        if (scannedPages[url]) {
-            return; // If page is already scanned, return
-        }
-        scannedPages[url] = true; // Mark the page as scanned
-
-        //fetches the content of the URL
-        $.get(url, function(data) {
-	        //returns a collection of all a tags with an href.
-            var links = $(data).find('a[href]');
-            console.log('links is ' + links);
-            displayLinks(url, links, searchString);
-
-            //loops through all the links
-            links.each(function() {
-                var href = $(this).attr('href');
-                //if its an internal page, recursively call this function for that link
-                if (isValidLink(href) && isInternalLink(href, url)) {
-                    var absoluteUrl = getAbsoluteUrl(href, url);
-                    scanPage(absoluteUrl, searchString); // Recursively scan each page on the domain
-                }
-            });
-        });
+    async function scanPage(url, searchString) {
+    if (scannedPages[url]) {
+        console.log(`Already scanned: ${url}`);
+        return; // If page is already scanned, return
     }
+    scannedPages[url] = true; // Mark the page as scanned
+
+    try {
+        console.log(`Fetching: ${url}`);
+        // Fetches the content of the URL
+        const data = await $.get(url);
+        // Returns a collection of all <a> tags with an href
+        const links = $(data).find('a[href]');
+        //console.log(`Found ${links.length} links on ${url}`);
+        const scripts = $(data).find('script');
+        console.log(`Found ${scripts.length} scripts on ${url}`);
+
+        displayLinks(url, links, scripts, searchString);
+        // Create an array of promises for recursive scanning
+        const scanPromises = [];
+        // Loops through all the links
+        links.each(function() {
+            const href = $(this).attr('href');
+            const absoluteUrl = new URL(href, url).href;
+            console.log(absoluteUrl)
+            // If it's an internal page, recursively call this function for that link
+            if (isValidLink(absoluteUrl) && isInternalLink(absoluteUrl, url)) {
+                console.log(`Queueing scan for: ${absoluteUrl}`);
+                scanPromises.push(scanPage(absoluteUrl, searchString)); // Add the promise to the array
+            }
+        });
+
+        // Wait for all recursive scans to complete
+        await Promise.all(scanPromises);
+    } catch (error) {
+      //error thrown with phones and emails, should fix when removing these links.
+      var $errorDiv = $('#errorBox');
+      //if ($errorDiv.html() === ""){
+      $errorDiv.append('<p><div><h3>Error:</h3>'+  url + '<p>Ensure that the link is secure <strong>(prepended with https://)</strong> and the <strong><a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1">Allow CORS</a></strong> chrome extension is active on your browser.</p><div>');
+//}
+        console.error(`Error scanning page ${url}:`, error);
+    }
+}
 
 	//takes the page URL, the list of links on that page, and a search string if provided
-    function displayLinks(pageUrl, links, searchString) {
+    function displayLinks(pageUrl, links, scripts, searchString) {
         var selectedServices = getSelectedServices();
         var $results = $('#results');
         var isFloater = false;
         //create a header for this page
         $results.append('<h2>Website Page: <a href="' + pageUrl + '">' + pageUrl + '</a></h2>');
-        $results.append('<h3>External links found:</h3>');
         var $externalLinksUl = $('<ul></ul>');
+        var $linksFound = false;
         //scans through links on the page.
+
+        scripts.each(function(){
+          var scriptSrc = $(this).attr('src');
+          formatExternalScript(scriptSrc);
+        })
+
         links.each(function() {
             var href = $(this).attr('href');
            //checks for the fh-fixed--bottom class, currently I don't think the app registers the floater as this is always returning false
             isFloater = $(this).hasClass('fh-fixed--bottom');
-            console.log(isFloater)
              //if the link is one we are searching for, call format link and append it to the list.
             if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
                 var formattedLink = formatExternalLink(href, isFloater);
                 $externalLinksUl.append('<li>' + formattedLink + '</li>');
+                $linksFound = true;
             }
         });
+        if ($linksFound){
+          $externalLinksUl.prepend('<h3>Matching Links:</h3>');
+        }
         $results.append($externalLinksUl);
+    }
+
+    function formatExternalScript(scriptSrc){
+      //Johnny needs to build out some functionality here.
+      if (scriptSrc.includes('fareharbor.com')){
+        var shortname = '';
+        var flow = '';
+        var item = '';
+        var scriptType = '';
+        console.log(shortname)
+      }
     }
 
     function formatExternalLink(url, isFloater) {
@@ -201,5 +241,9 @@ $(document).ready(function() {
     function clearResults() {
         $('#results').empty(); // Empty the results container
         scannedPages = {}; // Reset scanned pages
+    }
+
+    function clearError(){
+      $('#errorBox').empty();
     }
 });
