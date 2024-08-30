@@ -110,8 +110,21 @@ $(document).ready(function() {
       }
     }
 
-    function formatExternalLink(url, isFloater) {
-	    // if the link is a fareharbor link, split up the values on the link
+    function formatExternalLink(url, isFloater) {   
+        // if the link is an email, phone number, or socials return empty
+        if (url.includes('mailto:') || 
+        url.includes('tel:') || 
+        url.includes('facebook.com') || 
+        url.includes('twitter.com') || 
+        url.includes('instagram.com') || 
+        url.includes('linkedin.com') || 
+        url.includes('youtube.com') || 
+        url.includes('pinterest.com') || 
+        url.includes('tiktok.com') ||
+        url.includes('snapchat.com')) {
+        return '';
+    }  
+        // if the link is a fareharbor link, split up the values on the link
         if (url.includes('fareharbor.com')) {
             var shortName = url.split('/')[5];
             var itemMatch = url.match(/items\/(\d+)/);
