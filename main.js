@@ -110,7 +110,7 @@ $(document).ready(function() {
       }
     }
 
-    function formatExternalLink(url, isFloater) {   
+    function formatExternalLink(url, isFloater) {
         // if the link is an email, phone number, or socials return empty
         if (url.includes('mailto:') || 
         url.includes('tel:') || 
@@ -121,6 +121,9 @@ $(document).ready(function() {
         url.includes('youtube.com') || 
         url.includes('pinterest.com') || 
         url.includes('tiktok.com') ||
+        url.includes('vimeo') ||
+        url.includes('yelp') ||
+        url.includes('tripadvisor') ||
         url.includes('snapchat.com')) {
         return '';
     }  
