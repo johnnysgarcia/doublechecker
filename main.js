@@ -30,26 +30,29 @@ $(document).ready(function() {
     scannedPages[url] = true; // Mark the page as scanned
 
     try {
-        console.log(`Fetching: ${url}`);
+        //console.log(`Fetching: ${url}`);
         // Fetches the content of the URL
         const data = await $.get(url);
         // Returns a collection of all <a> tags with an href
         const links = $(data).find('a[href]');
         //console.log(`Found ${links.length} links on ${url}`);
         const scripts = $(data).find('script');
-        console.log(`Found ${scripts.length} scripts on ${url}`);
 
-        displayLinks(url, links, scripts, searchString);
+        //finds everything we need
+        var matchingData = findMatchingData(data, searchString);
+        displayMatchingData(matchingData, searchString, url);
+
+        //displayLinks(url, links, scripts, searchString);
         // Create an array of promises for recursive scanning
         const scanPromises = [];
         // Loops through all the links
         links.each(function() {
             const href = $(this).attr('href');
             const absoluteUrl = new URL(href, url).href;
-            console.log(absoluteUrl)
+            //console.log(absoluteUrl)
             // If it's an internal page, recursively call this function for that link
             if (isValidLink(absoluteUrl) && isInternalLink(absoluteUrl, url)) {
-                console.log(`Queueing scan for: ${absoluteUrl}`);
+                //console.log(`Queueing scan for: ${absoluteUrl}`);
                 scanPromises.push(scanPage(absoluteUrl, searchString)); // Add the promise to the array
             }
         });
@@ -66,7 +69,62 @@ $(document).ready(function() {
     }
 }
 
+// new function that finds everything.
+  function findMatchingData(data, searchString){
+    var matchingElements = [];
+    const $data = $(data);
+    var selectedServices = getSelectedServices();
+    console.log(selectedServices);
+    $data.find('*').each(function() {
+      //add checking here to see if FH is selected.
+      if ($(this).is('script[src*="fareharbor"]')) {
+          var src = $(this).attr('src');
+          console.log(src)
+          if ((!src.includes('api/v1')) && containsAnySelectedService(src, selectedServices)  || selectedServices.length === 0){
+          matchingElements.push(this);
+        }
+          //console.log(this)
+      }
+        if ($(this).is('a[href]')) {
+          var href = $(this).attr('href');
+          if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
+            matchingElements.push(this);
+            console.log(containsAnySelectedService(href, selectedServices) || selectedServices.length=== 0)
+          }
+        }
+    });
+return matchingElements;
+  }
+
+  function displayMatchingData(data, searchString, pageUrl){
+    //need to prepend page url
+    //console.log(data)
+    var selectedServices = getSelectedServices();
+    var $externalLinksUl = $('<ul></ul>');
+    var $results = $('#results');
+    $results.append('<h2>Website Page: <a href="' + pageUrl + '">' + pageUrl + '</a></h2>');
+    $(data).each(function(){
+
+      if($(this).is('a[href]')){
+        var href = $(this).attr('href');
+        var formattedLink = formatExternalLink(href);
+        $externalLinksUl.append('<li>' + formattedLink + '</li>');
+        $linksFound = true;
+      }
+      if ($(this).is('script')){
+        var scriptSrc = $(this).attr('src');
+        var formattedScript = formatExternalScript(scriptSrc)
+        $externalLinksUl.append('<li>' + formattedScript + '</li>');
+        $linksFound = true;
+      }
+    })
+    if ($linksFound){
+      $externalLinksUl.prepend('<h3>Matching Links:</h3>');
+    }
+    $results.append($externalLinksUl);
+  }
 	//takes the page URL, the list of links on that page, and a search string if provided
+  //adjust this to take in a list of allFH and interpret whether they are scripts or links
     function displayLinks(pageUrl, links, scripts, searchString) {
         // shows the loading icon when scanning
         $('#loading').show();
@@ -81,13 +139,15 @@ $(document).ready(function() {
 
         scripts.each(function(){
           var scriptSrc = $(this).attr('src');
-          formatExternalScript(scriptSrc);
+          var formattedScript = formatExternalScript(scriptSrc)
+          $externalLinksUl.append('<li>' + formattedScript + '</li>');
+          $linksFound = true;
         })
 
         links.each(function() {
             var href = $(this).attr('href');
            //checks for the fh-fixed--bottom class, currently I don't think the app registers the floater as this is always returning false
-            isFloater = $(this).hasClass('fh-fixed--bottom');
+           isFloater = $(this).hasClass('fh-fixed--bottom') || $(this).closest('.fh-fixed--bottom').length > 0;
              //if the link is one we are searching for, call format link and append it to the list.
             if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
                 var formattedLink = formatExternalLink(href, isFloater);
@@ -106,35 +166,44 @@ $(document).ready(function() {
     function formatExternalScript(scriptSrc){
       //Johnny needs to build out some functionality here.
       if (scriptSrc.includes('fareharbor.com')){
-        var shortname = '';
-        var flow = '';
-        var item = '';
-        var scriptType = '';
-        console.log(shortname)
-      }
+        var type = scriptSrc.match(/calendar/) ? "CALENDAR" : 'GRID';
+        var shortName = scriptSrc.split('/')[6];
+        var itemMatch = scriptSrc.match(/items\/(\d+)/);
+        var flowMatch = scriptSrc.match(/flow=(\d+)/);
+        var flowName = flowMatch ? flowMatch[1] : 'Default';
+        var itemName = itemMatch ? itemMatch[1] : '';
+        return '<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor ' + type + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">SN: ' + shortName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Item: ' + itemName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Flow: ' + flowName + '</div>';
     }
+  }
 
-    function formatExternalLink(url, isFloater) {   
+    function formatExternalLink(url, isFloater) {
         // if the link is an email, phone number, or socials return empty
-        if (url.includes('mailto:') || 
-        url.includes('tel:') || 
-        url.includes('facebook.com') || 
-        url.includes('twitter.com') || 
-        url.includes('instagram.com') || 
-        url.includes('linkedin.com') || 
-        url.includes('youtube.com') || 
-        url.includes('pinterest.com') || 
+        if (url.includes('mailto:') ||
+        url.includes('tel:') ||
+        url.includes('facebook.com') ||
+        url.includes('twitter.com') ||
+        url.includes('instagram.com') ||
+        url.includes('linkedin.com') ||
+        url.includes('youtube.com') ||
+        url.includes('pinterest.com') ||
         url.includes('tiktok.com') ||
+        url.includes('vimeo') ||
+        url.includes('yelp') ||
+        url.includes('tripadvisor') ||
+        url.includes('venmo') ||
+        url.includes('cash.app') ||
+        url.includes('google') ||
         url.includes('snapchat.com')) {
         return '';
-    }  
+    }   
+
         // if the link is a fareharbor link, split up the values on the link
         if (url.includes('fareharbor.com')) {
             var shortName = url.split('/')[5];
             var itemMatch = url.match(/items\/(\d+)/);
             var flowMatch = url.match(/flow=(\d+)/);
             var itemName = itemMatch ? itemMatch[1] : '';
-            var flowName = flowMatch ? flowMatch[1] : '';
+            var flowName = flowMatch ? flowMatch[1] : 'Default';
             //format listing depending on the service.
             return '<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">SN: ' + shortName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Item: ' + itemName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Flow: ' + flowName + '</div>';
         } else if (url.includes('peek.com')){
@@ -185,8 +254,13 @@ $(document).ready(function() {
         } else if (url.includes('booqable')){
 	        var link = url;
 	        return '<div class="fh-button-true-flat-booqable fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqablelogo.jpeg"> Booqable</div> ' + link;
-        }else {
-            return url;
+        } else if (url.includes('getyourguide')){
+	        var link = url;
+	        return '<div class="fh-button-true-flat-getyourguide fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqable.jpeg"> Get Your Guide</div> ' + link;
+        } 
+          else {
+            return '<div><a href="' + url + '" target="_blank">External Link Found</a></div>';
+
         }
     }
 
@@ -229,7 +303,9 @@ $(document).ready(function() {
     function containsAnySelectedService(url, services) {
         for (var i = 0; i < services.length; i++) {
             var serviceName = services[i].toLowerCase();
+            //console.log('comparing ' + url + " to " + services[i])
             if (url.toLowerCase().includes(serviceName)) {
+              //console.log('match')
                 return true; // If any selected service name is found in the URL, return true
             }
         }
@@ -264,6 +340,10 @@ $(document).ready(function() {
       $('#errorBox').empty();
     }
 });
+
+
+
+
 
 setTimeout(function() {
     $('#loading').hide();
