@@ -21,17 +21,25 @@ $(document).ready(function() {
             $('#allServicesCheckbox').prop('checked', false);
         }
     });
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     async function scanPage(url, searchString) {
     if (scannedPages[url]) {
         console.log(`Already scanned: ${url}`);
         return; // If page is already scanned, return
     }
+    /*var cleanUrl = new URL(url);
+    cleanUrl.search = ''; // Removes query parameters
+    url = cleanUrl.href;*/
     scannedPages[url] = true; // Mark the page as scanned
 
     try {
         //console.log(`Fetching: ${url}`);
         // Fetches the content of the URL
+        await delay(1000); // 1-second delay to avoid overwhelming the server
+
         const data = await $.get(url);
         // Returns a collection of all <a> tags with an href
         const links = $(data).find('a[href]');
@@ -49,25 +57,40 @@ $(document).ready(function() {
         links.each(function() {
             const href = $(this).attr('href');
             const absoluteUrl = new URL(href, url).href;
-            //console.log(absoluteUrl)
+
+            // Clean the query parameters from internal links
+            var cleanAbsoluteUrl = new URL(absoluteUrl);
+            cleanAbsoluteUrl.search = ''; // Removes query parameters from internal links
+            var finalUrl = cleanAbsoluteUrl.href;
+
             // If it's an internal page, recursively call this function for that link
-            if (isValidLink(absoluteUrl) && isInternalLink(absoluteUrl, url)) {
-                //console.log(`Queueing scan for: ${absoluteUrl}`);
-                scanPromises.push(scanPage(absoluteUrl, searchString)); // Add the promise to the array
+            if (isValidLink(finalUrl) && isInternalLink(finalUrl, url)) {
+                scanPromises.push(scanPage(finalUrl, searchString)); // Add the promise to the array
             }
         });
 
         // Wait for all recursive scans to complete
         await Promise.all(scanPromises);
     } catch (error) {
-      //error thrown with phones and emails, should fix when removing these links.
-      var $errorDiv = $('#errorBox');
-      //if ($errorDiv.html() === ""){
-      $errorDiv.append('<p><div><h3>Error:</h3>'+  url + '<p>Ensure that the link is secure <strong>(prepended with https://)</strong> and the <strong><a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1">Allow CORS</a></strong> chrome extension is active on your browser.</p><div>');
-//}
+      if (error.status === 429) {
+    console.log(`Rate-limited on ${url}. Retrying in a few seconds.`);
+    await delay(5000); // Wait 5 seconds before retrying
+    return scanPage(url, searchString); // Retry after delay
+} if (error.status === 0) {
+  var $errorDiv = $('#errorBox');
+  $errorDiv.append('<p><div><h3>Error: ' + error.status + '</h3>'+  url +
+  '<p>Ensure that the link is secure <strong>(prepended with https://)</strong> and the <strong><a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1">Allow CORS</a></strong> chrome extension is active on your browser.</p><div>');
+} else {
+  //error thrown with phones and emails, should fix when removing these links.
+  var $errorDiv = $('#errorBox');
+  $errorDiv.append('<p><div><h3>Error: ' + error.status + '</h3>'+  url +
+    '</p><div>');
+
+}
         console.error(`Error scanning page ${url}:`, error);
     }
 }
+
 
 // new function that finds everything.
   function findMatchingData(data, searchString){
@@ -102,7 +125,8 @@ return matchingElements;
     var selectedServices = getSelectedServices();
     var $externalLinksUl = $('<ul></ul>');
     var $results = $('#results');
-    $results.append('<h2>Website Page: <a href="' + pageUrl + '">' + pageUrl + '</a></h2>');
+    var $linksFound = false;
+    $results.append('<h2>Website Page: <a  target="_blank" href="' + pageUrl + '">' + pageUrl + '</a></h2>');
     $(data).each(function(){
 
       if($(this).is('a[href]')){
@@ -110,8 +134,7 @@ return matchingElements;
         var formattedLink = formatExternalLink(href);
         $externalLinksUl.append('<li>' + formattedLink + '</li>');
         $linksFound = true;
-      }
-      if ($(this).is('script')){
+      } else if ($(this).is('script')){
         var scriptSrc = $(this).attr('src');
         var formattedScript = formatExternalScript(scriptSrc)
         $externalLinksUl.append('<li>' + formattedScript + '</li>');
@@ -130,7 +153,7 @@ return matchingElements;
         var $results = $('#results');
         var isFloater = false;
         //create a header for this page
-        $results.append('<h2>Website Page: <a href="' + pageUrl + '">' + pageUrl + '</a></h2>');
+        $results.append('<h2>Website Page <a href="' + pageUrl + '" target="_blank">' + pageUrl + '</a></h2>');
         var $externalLinksUl = $('<ul></ul>');
         var $linksFound = false;
         //scans through links on the page.
@@ -145,7 +168,7 @@ return matchingElements;
         links.each(function() {
             var href = $(this).attr('href');
            //checks for the fh-fixed--bottom class, currently I don't think the app registers the floater as this is always returning false
-           isFloater = $(this).hasClass('fh-fixed--bottom') || $(this).closest('.fh-fixed--bottom').length > 0;
+            isFloater = $(this).hasClass('fh-fixed--bottom');
              //if the link is one we are searching for, call format link and append it to the list.
             if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
                 var formattedLink = formatExternalLink(href, isFloater);
@@ -169,8 +192,8 @@ return matchingElements;
         var flowName = flowMatch ? flowMatch[1] : 'Default';
         var itemName = itemMatch ? itemMatch[1] : '';
         return '<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor ' + type + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">SN: ' + shortName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Item: ' + itemName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Flow: ' + flowName + '</div>';
+      }
     }
-  }
 
     function formatExternalLink(url, isFloater) {
         // if the link is an email, phone number, or socials return empty
@@ -186,13 +209,9 @@ return matchingElements;
         url.includes('vimeo') ||
         url.includes('yelp') ||
         url.includes('tripadvisor') ||
-        url.includes('venmo') ||
-        url.includes('cash.app') ||
-        url.includes('google') ||
         url.includes('snapchat.com')) {
         return '';
-    }   
-
+    }
         // if the link is a fareharbor link, split up the values on the link
         if (url.includes('fareharbor.com')) {
             var shortName = url.split('/')[5];
@@ -250,13 +269,8 @@ return matchingElements;
         } else if (url.includes('booqable')){
 	        var link = url;
 	        return '<div class="fh-button-true-flat-booqable fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqablelogo.jpeg"> Booqable</div> ' + link;
-        } else if (url.includes('getyourguide')){
-	        var link = url;
-	        return '<div class="fh-button-true-flat-getyourguide fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqable.jpeg"> Get Your Guide</div> ' + link;
-        } 
-          else {
-            return '<div><a href="' + url + '" target="_blank">External Link Found</a></div>';
-
+        }else {
+            return url;
         }
     }
 
@@ -272,7 +286,7 @@ return matchingElements;
     }
 
     function isValidLink(url) {
-        return url && !url.startsWith('#') && !url.startsWith('/') && !url.includes('#') && !url.includes('javascript:void(0)');
+        return url && !url.startsWith('mailto') && !url.startsWith('#') && !url.startsWith('tel') && !url.startsWith('/') && !url.endsWith('.jpg') && !url.endsWith('.webp') && !url.endsWith('.pdf') && !url.includes('#') && !url.includes('javascript:void(0)');
     }
 
     function isExternalLink(url) {
@@ -336,5 +350,3 @@ return matchingElements;
       $('#errorBox').empty();
     }
 });
-
-
