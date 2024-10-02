@@ -145,7 +145,7 @@ return matchingElements;
         links.each(function() {
             var href = $(this).attr('href');
            //checks for the fh-fixed--bottom class, currently I don't think the app registers the floater as this is always returning false
-            isFloater = $(this).hasClass('fh-fixed--bottom');
+           isFloater = $(this).hasClass('fh-fixed--bottom') || $(this).closest('.fh-fixed--bottom').length > 0;
              //if the link is one we are searching for, call format link and append it to the list.
             if (isValidLink(href) && isExternalLink(href) && (containsAnySelectedService(href, selectedServices) || selectedServices.length === 0) && containsSearchString(href, searchString)) {
                 var formattedLink = formatExternalLink(href, isFloater);
@@ -169,8 +169,8 @@ return matchingElements;
         var flowName = flowMatch ? flowMatch[1] : 'Default';
         var itemName = itemMatch ? itemMatch[1] : '';
         return '<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor ' + type + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">SN: ' + shortName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Item: ' + itemName + '</div> <div class="fh-button-true-flat fh-size--small fh-shape--round">Flow: ' + flowName + '</div>';
-      }
     }
+  }
 
     function formatExternalLink(url, isFloater) {
         // if the link is an email, phone number, or socials return empty
@@ -186,9 +186,13 @@ return matchingElements;
         url.includes('vimeo') ||
         url.includes('yelp') ||
         url.includes('tripadvisor') ||
+        url.includes('venmo') ||
+        url.includes('cash.app') ||
+        url.includes('google') ||
         url.includes('snapchat.com')) {
         return '';
-    }
+    }   
+
         // if the link is a fareharbor link, split up the values on the link
         if (url.includes('fareharbor.com')) {
             var shortName = url.split('/')[5];
@@ -246,8 +250,13 @@ return matchingElements;
         } else if (url.includes('booqable')){
 	        var link = url;
 	        return '<div class="fh-button-true-flat-booqable fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqablelogo.jpeg"> Booqable</div> ' + link;
-        }else {
-            return url;
+        } else if (url.includes('getyourguide')){
+	        var link = url;
+	        return '<div class="fh-button-true-flat-getyourguide fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqable.jpeg"> Get Your Guide</div> ' + link;
+        } 
+          else {
+            return '<div><a href="' + url + '" target="_blank">External Link Found</a></div>';
+
         }
     }
 
@@ -325,5 +334,27 @@ return matchingElements;
 
     function clearError(){
       $('#errorBox').empty();
+    }
+});
+
+
+$(document).ready(function() {
+    const delay = 5000; // 5 seconds delay
+    setTimeout(function() {
+        console.log('Starting delayed scan for <a> tags with "fh" class...');
+        $('a').each(function() {
+            const classList = $(this).attr('class');
+            if (classList && classList.includes('fh')) {
+                console.log("Found an <a> tag with 'fh' class: ", classList);
+                appendFloaterMessage();
+            }
+        });
+    }, delay);
+
+    // Function to append "Has Floater" message when a class with 'fh' is found
+    function appendFloaterMessage() {
+        var $externalLinksUl = $('<ul></ul>'); // Assuming you're appending to an existing list
+        $externalLinksUl.append('<div>Has Floater</div>');
+        $('#results').append($externalLinksUl); // Append to the results or desired location
     }
 });
