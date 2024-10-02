@@ -68,6 +68,8 @@ $(document).ready(function() {
 
 	//takes the page URL, the list of links on that page, and a search string if provided
     function displayLinks(pageUrl, links, scripts, searchString) {
+        // shows the loading icon when scanning
+        $('#loading').show();
         var selectedServices = getSelectedServices();
         var $results = $('#results');
         var isFloater = false;
@@ -97,6 +99,8 @@ $(document).ready(function() {
           $externalLinksUl.prepend('<h3>Matching Links:</h3>');
         }
         $results.append($externalLinksUl);
+        // hides the loading icon once it is finished scanning
+        $('#loading').hide();
     }
 
     function formatExternalScript(scriptSrc){
@@ -260,3 +264,7 @@ $(document).ready(function() {
       $('#errorBox').empty();
     }
 });
+
+setTimeout(function() {
+    $('#loading').hide();
+}, 500); // adds delay to the icon for pages that are scanned quickly
