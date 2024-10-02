@@ -336,25 +336,3 @@ return matchingElements;
       $('#errorBox').empty();
     }
 });
-
-
-$(document).ready(function() {
-    const delay = 5000; // 5 seconds delay
-    setTimeout(function() {
-        console.log('Starting delayed scan for <a> tags with "fh" class...');
-        $('a').each(function() {
-            const classList = $(this).attr('class');
-            if (classList && classList.includes('fh')) {
-                console.log("Found an <a> tag with 'fh' class: ", classList);
-                appendFloaterMessage();
-            }
-        });
-    }, delay);
-
-    // Function to append "Has Floater" message when a class with 'fh' is found
-    function appendFloaterMessage() {
-        var $externalLinksUl = $('<ul></ul>'); // Assuming you're appending to an existing list
-        $externalLinksUl.append('<div>Has Floater</div>');
-        $('#results').append($externalLinksUl); // Append to the results or desired location
-    }
-});
