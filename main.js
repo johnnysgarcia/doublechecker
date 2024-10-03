@@ -28,6 +28,8 @@ $(document).ready(function() {
         return; // If page is already scanned, return
     }
     scannedPages[url] = true; // Mark the page as scanned
+   // shows loading screen while the website is scanned
+    $('#loadingScreen').show();
 
     try {
         //console.log(`Fetching: ${url}`);
@@ -37,6 +39,12 @@ $(document).ready(function() {
         const links = $(data).find('a[href]');
         //console.log(`Found ${links.length} links on ${url}`);
         const scripts = $(data).find('script');
+        // scans for any element that has the floater class returns the div if floater is found
+        if ($(data).find('.fh-fixed--bottom').length > 0) {
+            $('#results').append('<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor Floater</div>');
+        } else {
+            $('#results').append('<div class="fh-button-true-flat fh-size--small fh-shape--round"><img class="fhlogo" src="images/fhlogo.png"> FareHarbor Floater</div>')
+        }
 
         //finds everything we need
         var matchingData = findMatchingData(data, searchString);
@@ -66,6 +74,9 @@ $(document).ready(function() {
       $errorDiv.append('<p><div><h3>Error:</h3>'+  url + '<p>Ensure that the link is secure <strong>(prepended with https://)</strong> and the <strong><a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1">Allow CORS</a></strong> chrome extension is active on your browser.</p><div>');
 //}
         console.error(`Error scanning page ${url}:`, error);
+    } finally {
+        // hides the loading screen after scanning
+        $('#loadingScreen').hide();
     }
 }
 
@@ -126,8 +137,6 @@ return matchingElements;
 	//takes the page URL, the list of links on that page, and a search string if provided
   //adjust this to take in a list of allFH and interpret whether they are scripts or links
     function displayLinks(pageUrl, links, scripts, searchString) {
-        // shows the loading icon when scanning
-        $('#loading').show();
         var selectedServices = getSelectedServices();
         var $results = $('#results');
         var isFloater = false;
@@ -159,8 +168,7 @@ return matchingElements;
           $externalLinksUl.prepend('<h3>Matching Links:</h3>');
         }
         $results.append($externalLinksUl);
-        // hides the loading icon once it is finished scanning
-        $('#loading').hide();
+      
     }
 
     function formatExternalScript(scriptSrc){
@@ -256,9 +264,11 @@ return matchingElements;
 	        return '<div class="fh-button-true-flat-booqable fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqablelogo.jpeg"> Booqable</div> ' + link;
         } else if (url.includes('getyourguide')){
 	        var link = url;
+	        return '<div class="fh-button-true-flat-acuity fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqable.jpeg"> Acuity</div> ' + link;
+        } else if (url.includes('acuity')){
+	        var link = url;
 	        return '<div class="fh-button-true-flat-getyourguide fh-size--small fh-shape--round fh-color--black" style="border: 1px solid #000 !important;"><img class="peeklogo" src="images/booqable.jpeg"> Get Your Guide</div> ' + link;
-        } 
-          else {
+        }  else {
             return '<div><a href="' + url + '" target="_blank">External Link Found</a></div>';
 
         }
@@ -341,10 +351,7 @@ return matchingElements;
     }
 });
 
-
-
-
-
+// delays the hiding of the loading screen for quick scans
 setTimeout(function() {
-    $('#loading').hide();
-}, 500); // adds delay to the icon for pages that are scanned quickly
+    $('#loadingScreen').hide();
+}, 50000); 
