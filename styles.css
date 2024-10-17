@@ -12,15 +12,30 @@ body {
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-h1 {
+
+#title {
     color: #0a6ece;
     text-align: center;
+    display: inline-block; 
 }
+
+#header {
+	text-align: center;
+}
+
 label {
     display: block;
     margin-bottom: 10px;
     font-weight: bold;
     color: #333;
+}
+h2 {
+	color: #076fce;
+}
+
+h4 { 
+	
+	color: #076fce
 }
 
 #errorBox > div > h3 {
@@ -35,22 +50,24 @@ input[type="text"] {
     border-radius: 4px;
     box-sizing: border-box;
 }
-button {
-    background-color: #0a6ece;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
+
+#infoBtn {
+    margin-bottom: 25px !important;
+    /* for question mark */
+    font-size: 20px !important;
+    padding: 3px 18px !important;
+    vertical-align: -webkit-baseline-middle;
+    margin-left: 8px !important;
+}
+
+#scanBtn {
     width: calc(50% - 22px);
-    box-sizing: border-box;
 }
-button:hover {
-    background-color: #075aae;
-}
+
 .results {
     margin-top: 20px;
 }
+
 .results h2 {
     color: #0a6ece;
     margin-bottom: 10px;
@@ -100,4 +117,57 @@ button:hover {
     border-radius: 30px;
     margin-bottom: -10px;
     margin-left: -13px;
+}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  transition: opacity 0.5s ease;
+
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 70%; /* Could be more or less, depending on screen size */
+  transform: scale(0);
+  animation: openModal 0.3s forwards;
+}
+
+@keyframes openModal {
+  0% {
+    opacity: .5;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }

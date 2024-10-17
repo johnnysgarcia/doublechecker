@@ -9,14 +9,38 @@
 </head>
 <body>
     <div id="loadingIcon" style="display: none !important;">
-    
+
     </div>
     <div class="container">
-        <h1>Online Booking Software Scanner!</h1>
+	    <div id="header">
+        <h1 id="title">FareHarbor Site Sweeper!</h1> <a id="infoBtn" class="fh-button-true-flat fh-shape--round">?</a>
+        </div>
+
+        
+        <!-- The Modal -->
+		<div id="myModal" class="modal">
+		
+		  <!-- Modal content -->
+		  <div class="modal-content">
+		    <span class="close">&times;</span>
+		    <h2>Welcome to the FareHarbor Site Sweeper!</h2>
+			<p>This is a tool developed by FareHarbor's integration team to sweep websites looking for certain links. Use it to see what FareHarbor links are on a client's website, or to see if a client has another booking software on their site.</p>
+			<p>To use, enter the root domain of the site you want to you want to sweep, check the box of the software that you are looking for, check for all links on the site, or search for a specific word, and click "scan"</p>
+			<h4>Important Notes</h4>
+			<ul>
+				<li>In order for the tool to work, you must have the <a target="_blank" href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1">Allow CORS</a> extension installed and activated on your browser</li>
+				<li>The tool is still in early development, for any feedback or if you are seeing bugs, please fill out <a target="_blank" href="https://airtable.com/app9VtXS1vJyLgLgK/pageu72wvBiYVx9Xd/form">this form</a> or reach out to Johnny Garcia</li>
+			</ul>
+		  </div>
+		
+		</div>
+		<!-- End Modal -->
+		
+		
         <label for="url">Enter URL:</label>
         <input type="text" id="url" placeholder="Enter URL...">
         <input type="text" id="searchString" placeholder="Search String (Optional)">
-        <button id="scanBtn">Scan</button>
+        <a class="fh-button-true-flat" id="scanBtn">Scan</a>
 
         <h3>Services</h3>
         <ul class="services-list">
@@ -53,6 +77,6 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="main.js"></script>
-    
+
 </body>
 </html>
